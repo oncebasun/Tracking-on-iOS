@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -49,13 +50,6 @@
                                     <action selector="Camshift:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="mCb-i4-vgK"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qIV-Gw-wlh">
-                                <rect key="frame" x="490" y="180" width="44" height="30"/>
-                                <state key="normal" title="CMT"/>
-                                <connections>
-                                    <action selector="CMT:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="B6p-FS-6Rg"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0lM-uM-ddm">
                                 <rect key="frame" x="493" y="40" width="45" height="30"/>
                                 <state key="normal" title="Struck">
@@ -63,6 +57,20 @@
                                 </state>
                                 <connections>
                                     <action selector="Struck:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="Da9-oi-MDd"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="P0o-VS-Mdw">
+                                <rect key="frame" x="492" y="256" width="46" height="30"/>
+                                <state key="normal" title="Hough"/>
+                                <connections>
+                                    <action selector="Hough:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="1of-ic-Eqf"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qIV-Gw-wlh">
+                                <rect key="frame" x="490" y="180" width="44" height="30"/>
+                                <state key="normal" title="CMT"/>
+                                <connections>
+                                    <action selector="CMT:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="B6p-FS-6Rg"/>
                                 </connections>
                             </button>
                         </subviews>

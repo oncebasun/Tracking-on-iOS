@@ -39,7 +39,10 @@ typedef enum {
     COLOR_TRACKER,
     CAMSHIFT_TRACKER,
     STRUCK_TRACKER,
+    HOUGH_TRACKER,
 }TrackType;
+
+unsigned int hough_cnt = 0;
 
 @interface ViewController ()<CvVideoCameraDelegate>
 {
@@ -149,6 +152,11 @@ typedef enum {
     [self reset];
 }
 
+- (IBAction)Hough:(id)sender{
+    trackType = HOUGH_TRACKER;
+    [self reset];
+}
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     startTracking = false;
@@ -207,11 +215,70 @@ typedef enum {
             [self camshiftTracking:image];
         case STRUCK_TRACKER:
             [self struckTracking:image];
+        case HOUGH_TRACKER:
+            [self houghTracking:image];
         default:
             break;
     }
 
 }
+
+- (void)houghTracking:(cv::Mat &)image
+{
+  NSLog(@"ALEPH_DEBUG: Hough Count = %d\n", ++hough_cnt);
+  Mat img_gray, img_gray_hough;
+  cvtColor(image,img_gray,CV_RGB2GRAY);
+  cvtColor(image,img_gray_hough,CV_RGB2GRAY);
+  GaussianBlur( img_gray_hough, img_gray_hough, cv::Size(9, 9), 2, 2 );
+  
+  vector<Vec3f> circles;
+  HoughCircles( img_gray_hough, circles, CV_HOUGH_GRADIENT, 1, img_gray_hough.rows/8, 200, 5, 0, 20 );
+  NSLog(@"ALEPH_DEBUG: circles.size() = %d\n", circles.size());
+  for( size_t i = 0; i < circles.size(); i++ )
+  {
+    cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+    int radius = cvRound(circles[i][2]);
+    // circle center
+    circle( image, center, 3, Scalar(0,255,0), -1, 8, 0 );
+    // circle outline
+    circle( image, center, radius, Scalar(0,0,255), 3, 8, 0 );
+    /*
+    initCTBox = cv::Rect((center.x - radius) * RATIO,(center.y - radius) * RATIO,0,0);
+    initCTBox.width = 2*radius;
+    initCTBox.height =2*radius;
+    
+    if (cmtTracker != NULL) {
+      delete cmtTracker;
+    }
+    cmtTracker = new cmt::CMT();
+    cmtTracker->initialize(img_gray,initCTBox);
+    NSLog(@"cmt track init!");
+    startTracking = true;
+    
+    if (startTracking) {
+      NSLog(@"cmt process...");
+      cmtTracker->processFrame(img_gray);
+      
+      for(size_t i = 0; i < cmtTracker->points_active.size(); i++)
+      {
+        circle(image, cmtTracker->points_active[i], 2, Scalar(255,0,0));
+      }
+      
+      
+      RotatedRect rect = cmtTracker->bb_rot;
+      Point2f vertices[4];
+      rect.points(vertices);
+      for (int i = 0; i < 4; i++)
+      {
+        line(image, vertices[i], vertices[(i+1)%4], Scalar(255,0,255));
+      }
+    }
+    */
+  }
+  beginInit = false;
+}
+
+
 
 - (void)struckTracking:(cv::Mat &)image
 {
