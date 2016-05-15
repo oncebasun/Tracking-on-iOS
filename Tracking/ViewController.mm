@@ -32,6 +32,9 @@
 #define JUDGE_CENTER_THRESHOLD 0.5
 #define JUDGE_RADIUS_THRESHOLD 1
 #define RADIUS_RATE 1.25
+#define TEXT_NUM_OFFSET 10
+#define TEXT_SIZE 0.35
+#define COLOR_NON_SELECTED_REC Scalar(0,255,0)
 
 #define _HOUGH_TRACK_MODE_CMT
 //#define _HOUGH_TRACK_MODE_CT
@@ -56,7 +59,7 @@ unsigned int hough_cnt = 0;
 bool cmtReset = true;
 vector<Vec3f> circles;
 vector<cv::Rect> circ_box;
-vector<double> circles_init_y;
+vector<int> circles_init_y;
 
 
 #ifdef _HOUGH_TRACK_MODE_CMT
@@ -179,6 +182,7 @@ vector<double> circles_init_y;
     hough_cnt = 0;
     circles.clear();
     circ_box.clear();
+    circles_init_y.clear();
     beginInit = true;
     startTracking = false;
     [self reset];
@@ -287,6 +291,7 @@ vector<double> circles_init_y;
           circ_box[i].x = circles[i][0] - RADIUS_RATE*circles[i][2];
           circ_box[i].y = circles[i][1] - RADIUS_RATE*circles[i][2];
           circ_box[i].width = circ_box[i].height = 2*RADIUS_RATE*circles[i][2];
+          circles_init_y[i] = t_circles[j][1];
         }
       }
       /*匹配失败，找到了新的圆*/
@@ -294,6 +299,7 @@ vector<double> circles_init_y;
         NSLog(@"ALEPH_DEBUG: ==INSERT==\n");
         circles.push_back(*new Vec3f(t_circles[j][0],t_circles[j][1],t_circles[j][2]));
         circ_box.push_back(cv::Rect(t_circles[j][0] - RADIUS_RATE*t_circles[j][2], t_circles[j][1] - RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2]));
+        circles_init_y.push_back(t_circles[j][1]);
       }
     }
     NSLog(@"ALEPH_DEBUG: circles.size = %d\n", (int)circles.size());
@@ -339,22 +345,32 @@ vector<double> circles_init_y;
       for(track_itor = 0; track_itor < tracklen; track_itor++) {
         #ifdef _HOUGH_TRACK_MODE_CMT
           circ_trackers[track_itor]->processFrame(img_gray);
+          double y = 0;
           for(size_t i = 0; i < circ_trackers[track_itor]->points_active.size(); i++){
             circle(image, circ_trackers[track_itor]->points_active[i], 2, Scalar(255,0,0));
+            y += circ_trackers[track_itor]->points_active[i].y;
           }
+          y /= circ_trackers[track_itor]->points_active.size();
           RotatedRect rect = circ_trackers[track_itor]->bb_rot;
           Point2f vertices[4];
           rect.points(vertices);
           for (int i = 0; i < 4; i++) {
-            line(image, vertices[i], vertices[(i+1)%4], Scalar(255,0,255));
+            line(image, vertices[i], vertices[(i+1)%4], COLOR_NON_SELECTED_REC);
           }
-          putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(vertices[0].x, vertices[0].y - 20), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+          //putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(vertices[0].x, vertices[0].y - TEXT_NUM_OFFSET), FONT_HERSHEY_SIMPLEX, TEXT_SIZE, cvScalar(0,255,255));
+          putText(  image,  /*输出图像*/
+                    cv::String([[NSString stringWithFormat:@"%d/%d", (int)y, circles_init_y[track_itor]] UTF8String]),  /*输出字符串*/
+                    cv::Point(vertices[0].x, vertices[0].y - TEXT_NUM_OFFSET),  /*输出位置，字符串的左下角位于这个点*/
+                    FONT_HERSHEY_SIMPLEX, /*字体*/
+                    TEXT_SIZE,  /*字体大小*/
+                    cvScalar(0,255,255) /*颜色，顺序为BGR*/
+                );
         #endif
 
         #ifdef _HOUGH_TRACK_MODE_CT
           circ_trackers[track_itor]->processFrame(img_gray, circ_box[track_itor]);
-          rectangle(image, circ_box[track_itor], Scalar(255,0,255),1);
-          putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(circ_box[track_itor].x, circ_box[track_itor].y - 20), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+          rectangle(image, circ_box[track_itor], COLOR_NON_SELECTED_REC,1);
+          putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(circ_box[track_itor].x, circ_box[track_itor].y - TEXT_NUM_OFFSET), FONT_HERSHEY_SIMPLEX, TEXT_SIZE, cvScalar(0,255,255));
         #endif
       }
     }
