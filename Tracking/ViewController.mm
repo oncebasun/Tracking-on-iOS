@@ -30,8 +30,11 @@
 #define HOUGH_TRACK_TIME 0
 #define HOUGH_TRACK_DIEDAI 200
 #define JUDGE_CENTER_THRESHOLD 0.5
-#define JUDGE_RADIUS_THRESHOLD 0.1
+#define JUDGE_RADIUS_THRESHOLD 1
 #define RADIUS_RATE 1.25
+
+#define _HOUGH_TRACK_MODE_CMT
+//#define _HOUGH_TRACK_MODE_CT
 
 using namespace cv;
 using namespace cv::colortracker;
@@ -53,8 +56,15 @@ unsigned int hough_cnt = 0;
 bool cmtReset = true;
 vector<Vec3f> circles;
 vector<cv::Rect> circ_box;
-vector<cmt::CMT *> circ_trackers;
+vector<double> circles_init_y;
 
+
+#ifdef _HOUGH_TRACK_MODE_CMT
+  vector<cmt::CMT *> circ_trackers;
+#endif
+#ifdef _HOUGH_TRACK_MODE_CT
+  vector<CompressiveTracker *> circ_trackers;
+#endif
 
 @interface ViewController ()<CvVideoCameraDelegate>
 {
@@ -249,6 +259,7 @@ vector<cmt::CMT *> circ_trackers;
 {
   static int track_itor = 0;
   NSLog(@"ALEPH_DEBUG: Hough Count = %d\n", hough_cnt++);
+  NSLog(@"ALEPH_DEBUG: time = %f\n", [[NSDate date] timeIntervalSince1970]);
   Mat img_gray, img_gray_hough;
   /*转为灰度图*/
   cvtColor(image,img_gray,CV_RGB2GRAY);
@@ -280,7 +291,7 @@ vector<cmt::CMT *> circ_trackers;
       }
       /*匹配失败，找到了新的圆*/
       if (bj){
-        NSLog(@"ALEPH_DEBUG: ==INSTERT==\n");
+        NSLog(@"ALEPH_DEBUG: ==INSERT==\n");
         circles.push_back(*new Vec3f(t_circles[j][0],t_circles[j][1],t_circles[j][2]));
         circ_box.push_back(cv::Rect(t_circles[j][0] - RADIUS_RATE*t_circles[j][2], t_circles[j][1] - RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2]));
       }
@@ -309,29 +320,42 @@ vector<cmt::CMT *> circ_trackers;
       int tracklen = (int)circ_box.size();
       for(track_itor = 0; track_itor < tracklen; track_itor++) {
         NSLog(@"ALEPH_DEBUG: --init tracker %d--\n", track_itor);
-        
-        circ_trackers.push_back(new cmt::CMT());
-        circ_trackers[track_itor] -> initialize(img_gray, circ_box[track_itor]);
+        #ifdef _HOUGH_TRACK_MODE_CMT
+          circ_trackers.push_back(new cmt::CMT());
+          circ_trackers[track_itor] -> initialize(img_gray, circ_box[track_itor]);
+        #endif
+        #ifdef _HOUGH_TRACK_MODE_CT
+          circ_trackers.push_back(new CompressiveTracker);
+          circ_trackers[track_itor] -> init(img_gray, circ_box[track_itor]);
+        #endif
       }
-      NSLog(@"cmt track init!");
+      NSLog(@"track init!");
       startTracking = true;
       beginInit = false;
     }
     if (startTracking) {
-      NSLog(@"cmt process...");
+      NSLog(@"track process...");
       int tracklen = (int)circ_box.size();
       for(track_itor = 0; track_itor < tracklen; track_itor++) {
-        circ_trackers[track_itor]->processFrame(img_gray);
-        for(size_t i = 0; i < circ_trackers[track_itor]->points_active.size(); i++){
-          circle(image, circ_trackers[track_itor]->points_active[i], 2, Scalar(255,0,0));
-        }
-        RotatedRect rect = circ_trackers[track_itor]->bb_rot;
-        Point2f vertices[4];
-        rect.points(vertices);
-        for (int i = 0; i < 4; i++) {
-          line(image, vertices[i], vertices[(i+1)%4], Scalar(255,0,255));
-        }
-        putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(vertices[0].x, vertices[0].y - 20), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+        #ifdef _HOUGH_TRACK_MODE_CMT
+          circ_trackers[track_itor]->processFrame(img_gray);
+          for(size_t i = 0; i < circ_trackers[track_itor]->points_active.size(); i++){
+            circle(image, circ_trackers[track_itor]->points_active[i], 2, Scalar(255,0,0));
+          }
+          RotatedRect rect = circ_trackers[track_itor]->bb_rot;
+          Point2f vertices[4];
+          rect.points(vertices);
+          for (int i = 0; i < 4; i++) {
+            line(image, vertices[i], vertices[(i+1)%4], Scalar(255,0,255));
+          }
+          putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(vertices[0].x, vertices[0].y - 20), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+        #endif
+
+        #ifdef _HOUGH_TRACK_MODE_CT
+          circ_trackers[track_itor]->processFrame(img_gray, circ_box[track_itor]);
+          rectangle(image, circ_box[track_itor], Scalar(255,0,255),1);
+          putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(circ_box[track_itor].x, circ_box[track_itor].y - 20), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+        #endif
       }
     }
   }

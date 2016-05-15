@@ -15,7 +15,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "249"
             endingLineNumber = "249"
-            landmarkName = "-houghTracking:"
+            landmarkName = "-processImage:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
