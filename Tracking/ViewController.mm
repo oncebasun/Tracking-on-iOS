@@ -32,9 +32,15 @@
 #define JUDGE_CENTER_THRESHOLD 0.5
 #define JUDGE_RADIUS_THRESHOLD 1
 #define RADIUS_RATE 2
-#define TEXT_NUM_OFFSET 10
-#define TEXT_SIZE 0.35
+#define TEXT_NUM_OFFSET 20
+#define TEXT_SIZE 0.5
 #define COLOR_NON_SELECTED_REC Scalar(0,255,0)
+#define COLOR_SELECTED_REC Scalar(0,0,255)
+#define TRACK_Y_SIZE 12
+#define V_MIN 0.0
+#define V_MAX 0.01875
+#define SCREEN_SCALE 0.2
+#define SCREEN_PIXELS 568.0
 
 #define _HOUGH_TRACK_MODE_CMT
 //#define _HOUGH_TRACK_MODE_CT
@@ -53,7 +59,13 @@ typedef enum {
     CAMSHIFT_TRACKER,
     STRUCK_TRACKER,
     HOUGH_TRACKER,
+    NONE,
 }TrackType;
+
+struct trackY {
+  int y[TRACK_Y_SIZE];
+  double t[TRACK_Y_SIZE];
+};
 
 unsigned int hough_cnt = 0;
 bool cmtReset = true;
@@ -64,6 +76,7 @@ vector<int> circles_curr_y;
 vector<double> circles_init_time;
 vector<double> circles_last_time;
 vector<cv::Rect> show_box;
+vector<trackY> circles_track_y;
 
 #ifdef _HOUGH_TRACK_MODE_CMT
   vector<cmt::CMT *> circ_trackers;
@@ -189,14 +202,27 @@ vector<cv::Rect> show_box;
     circles_curr_y.clear();
     circles_init_time.clear();
     circles_last_time.clear();
+    circles_track_y.clear();
     show_box.clear();
     beginInit = true;
     startTracking = false;
     [self reset];
 }
 
-- (IBAction)Next:(id)sender{
-    cmtReset = true;
+- (IBAction)Reset:(id)sender{
+  trackType = NONE;
+  hough_cnt = 0;
+  circles.clear();
+  circ_box.clear();
+  circles_init_y.clear();
+  circles_curr_y.clear();
+  circles_init_time.clear();
+  circles_last_time.clear();
+  circles_track_y.clear();
+  show_box.clear();
+  beginInit = true;
+  startTracking = false;
+  [self reset];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
@@ -269,8 +295,10 @@ vector<cv::Rect> show_box;
 - (void)houghTracking:(cv::Mat &)image
 {
   static int track_itor = 0;
-  NSLog(@"ALEPH_DEBUG: Hough Count = %d\n", hough_cnt++);
-  NSLog(@"ALEPH_DEBUG: time = %f\n", [[NSDate date] timeIntervalSince1970]);
+  static int tracklen = 0;
+  //NSLog(@"ALEPH_DEBUG: Hough Count = %d\n", hough_cnt );
+  //NSLog(@"ALEPH_DEBUG: time = %f\n", [[NSDate date] timeIntervalSince1970]);
+  hough_cnt++;
   Mat img_gray, img_gray_hough;
   /*转为灰度图*/
   cvtColor(image,img_gray,CV_RGB2GRAY);
@@ -287,10 +315,11 @@ vector<cv::Rect> show_box;
     bool bj = true;
     for (int j = 0; j< (int)t_circles.size(); j++){
       bj = true;
+      /*对每个点，查看是否有与上一帧匹配的点，若匹配上则认为是同一个点*/
       for (int i = 0; i < (int)circles.size() && bj; i ++) {
-        NSLog(@"ALEPH_DEBUG: j=%d, i=%d, V1 = %f, J1 = %f, V2 = %f, J2 = %f\n",j , i, sqrt(((circles[i][0]-t_circles[j][0])*(circles[i][0]-t_circles[j][0]))+((circles[i][1]-t_circles[j][1])*(circles[i][1]-t_circles[j][1]))), circles[i][2]/JUDGE_CENTER_THRESHOLD, fabs((circles[i][2] - t_circles[j][2])/circles[i][2]), (double)JUDGE_RADIUS_THRESHOLD);
+        //NSLog(@"ALEPH_DEBUG: j=%d, i=%d, V1 = %f, J1 = %f, V2 = %f, J2 = %f\n",j , i, sqrt(((circles[i][0]-t_circles[j][0])*(circles[i][0]-t_circles[j][0]))+((circles[i][1]-t_circles[j][1])*(circles[i][1]-t_circles[j][1]))), circles[i][2]/JUDGE_CENTER_THRESHOLD, fabs((circles[i][2] - t_circles[j][2])/circles[i][2]), (double)JUDGE_RADIUS_THRESHOLD);
         if(sqrt(((circles[i][0]-t_circles[j][0])*(circles[i][0]-t_circles[j][0]))+((circles[i][1]-t_circles[j][1])*(circles[i][1]-t_circles[j][1]))) < circles[i][2]/JUDGE_CENTER_THRESHOLD && fabs((circles[i][2] - t_circles[j][2])/circles[i][2]) < JUDGE_RADIUS_THRESHOLD ) {
-          NSLog(@"ALEPH_DEBUG: ==MATCHED==\n");
+          //NSLog(@"ALEPH_DEBUG: ==MATCHED==\n");
           bj = false;
           circles[i][0] = t_circles[j][0];
           circles[i][1] = t_circles[j][1];
@@ -304,7 +333,7 @@ vector<cv::Rect> show_box;
       }
       /*匹配失败，找到了新的圆*/
       if (bj){
-        NSLog(@"ALEPH_DEBUG: ==INSERT==\n");
+        //NSLog(@"ALEPH_DEBUG: ==INSERT==\n");
         circles.push_back(*new Vec3f(t_circles[j][0],t_circles[j][1],t_circles[j][2]));
         circ_box.push_back(cv::Rect(t_circles[j][0] - RADIUS_RATE*t_circles[j][2], t_circles[j][1] - RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2], 2*RADIUS_RATE*t_circles[j][2]));
         circles_init_y.push_back(t_circles[j][1]);
@@ -313,17 +342,18 @@ vector<cv::Rect> show_box;
         circles_last_time.push_back([[NSDate date] timeIntervalSince1970]);
       }
     }
-    NSLog(@"ALEPH_DEBUG: circles.size = %d\n", (int)circles.size());
+    //NSLog(@"ALEPH_DEBUG: circles.size = %d\n", (int)circles.size());
     putText(image, cv::String([[NSString stringWithFormat:@"%d", (int)circles.size()] UTF8String]), cv::Point(100,100), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0,255,255));
+    /*识别阶段结束，开始追踪*/
     beginInit = true;
   }
   /*追踪阶段*/
   else {
-    NSLog(@"ALEPH_DEBUG: ==TRACKING==\n");
-    NSLog(@"ALEPH_DEBUG: circles.size = %d\n", (int)circles.size());
+    //NSLog(@"ALEPH_DEBUG: ==TRACKING==\n");
+    //NSLog(@"ALEPH_DEBUG: circles.size = %d\n", (int)circles.size());
     if (beginInit) {
-      NSLog(@"ALEPH_DEBUG: ==INIT TRACK==\n");
-      /*vector重置*/
+      //NSLog(@"ALEPH_DEBUG: ==INIT TRACK==\n");
+      /*清空追踪器*/
       if (circ_trackers.size() != 0) {
         for(track_itor = 0; track_itor < circ_trackers.size(); track_itor++) {
           if(NULL != circ_trackers[track_itor]) {
@@ -333,28 +363,43 @@ vector<cv::Rect> show_box;
         }
         circ_trackers.clear();
       }
-      /*vector填充*/
-      int tracklen = (int)circ_box.size();
-      for(track_itor = 0; track_itor < tracklen; track_itor++) {
-        NSLog(@"ALEPH_DEBUG: --init tracker %d--\n", track_itor);
-        circ_box[track_itor].y += ([[NSDate date] timeIntervalSince1970] - circles_last_time[track_itor]) * ((circles_curr_y[track_itor] - circles_init_y[track_itor]) / (circles_last_time[track_itor] - circles_init_time[track_itor]));
-        show_box.push_back(circ_box[track_itor]);
-        #ifdef _HOUGH_TRACK_MODE_CMT
-          circ_trackers.push_back(new cmt::CMT());
-          circ_trackers[track_itor] -> initialize(img_gray, circ_box[track_itor]);
-        #endif
-        #ifdef _HOUGH_TRACK_MODE_CT
-          circ_trackers.push_back(new CompressiveTracker);
-          circ_trackers[track_itor] -> init(img_gray, circ_box[track_itor]);
-        #endif
-      }
-      NSLog(@"track init!");
-      startTracking = true;
+      track_itor = 0;
+      tracklen = (int)circ_box.size();
+      //NSLog(@"ALEPH_DEBUG: tracklen = %d\n",tracklen);
       beginInit = false;
+      startTracking = true;
+    }
+    if (show_box.size() < circ_box.size()) {
+      /*初始化每个追踪器*/
+      //NSLog(@"ALEPH_DEBUG: --init tracker %d--\n", track_itor);
+      circ_box[track_itor].y += ([[NSDate date] timeIntervalSince1970] - circles_last_time[track_itor]) * ((circles_curr_y[track_itor] - circles_init_y[track_itor]) / (circles_last_time[track_itor] - circles_init_time[track_itor]));
+      //NSLog(@"ALEPH_DEBUG: --step 1 over--\n");
+      show_box.push_back(circ_box[track_itor]);
+      //NSLog(@"ALEPH_DEBUG: --step 2 over--\n");
+      #ifdef _HOUGH_TRACK_MODE_CMT
+        circ_trackers.push_back(new cmt::CMT());
+        struct trackY tempty;
+      for(int ti = 0; ti < TRACK_Y_SIZE; ti++) {
+        tempty.y[ti] = 0;
+        tempty.t[ti] = 0;
+      }
+        circles_track_y.push_back(tempty);
+        circ_trackers[track_itor] -> initialize(img_gray, circ_box[track_itor]);
+      #endif
+      #ifdef _HOUGH_TRACK_MODE_CT
+        circ_trackers.push_back(new CompressiveTracker);
+        circ_trackers[track_itor] -> init(img_gray, circ_box[track_itor]);
+      #endif
+      //NSLog(@"ALEPH_DEBUG: --step 3 over--\n");
+      track_itor++;
+      if(track_itor >= tracklen) {
+        /*初始化成功，开始正式追踪*/
+        //NSLog(@"track init!");
+      }
     }
     if (startTracking) {
-      NSLog(@"track process...");
-      int tracklen = (int)circ_box.size();
+      //NSLog(@"track process...");
+      int tracklen = (int)show_box.size();
       for(track_itor = 0; track_itor < tracklen; track_itor++) {
         #ifdef _HOUGH_TRACK_MODE_CMT
           circ_trackers[track_itor]->processFrame(img_gray);
@@ -364,15 +409,36 @@ vector<cv::Rect> show_box;
             y += circ_trackers[track_itor]->points_active[i].y;
           }
           y /= circ_trackers[track_itor]->points_active.size();
+          for(int ti = TRACK_Y_SIZE - 2; ti >=0 ; ti--) {
+            circles_track_y[track_itor].y[ti+1] = circles_track_y[track_itor].y[ti];
+            circles_track_y[track_itor].t[ti+1] = circles_track_y[track_itor].t[ti];
+          }
+          circles_track_y[track_itor].y[0] = y;
+          circles_track_y[track_itor].t[0] = [[NSDate date] timeIntervalSince1970];
+          /*for(int ti = 0; ti < TRACK_Y_SIZE; ti++) {
+            NSLog(@"it:%d, time:%f\n",track_itor,circles_track_y[track_itor].t[ti]);
+          }*/
+          double v = 0;
+          for(int ti = 0; ti < TRACK_Y_SIZE/2; ti++ ){
+            v += (circles_track_y[track_itor].y[ti] - circles_track_y[track_itor].y[ti+(TRACK_Y_SIZE/2)])/(circles_track_y[track_itor].t[ti] - circles_track_y[track_itor].t[ti+(TRACK_Y_SIZE/2)]);
+            //NSLog(@"%f\n",circles_track_y[track_itor].t[ti] - circles_track_y[track_itor].t[ti+(TRACK_Y_SIZE/2)]);
+          }
+          v /= (TRACK_Y_SIZE/2);
+          v = v / SCREEN_PIXELS * SCREEN_SCALE ;
           RotatedRect rect = circ_trackers[track_itor]->bb_rot;
           Point2f vertices[4];
           rect.points(vertices);
           for (int i = 0; i < 4; i++) {
-            line(image, vertices[i], vertices[(i+1)%4], COLOR_NON_SELECTED_REC);
+            if ( v >= V_MIN && v <= V_MAX ) {
+              line(image, vertices[i], vertices[(i+1)%4], COLOR_SELECTED_REC);
+            }
+            else {
+              line(image, vertices[i], vertices[(i+1)%4], COLOR_NON_SELECTED_REC);
+            }
           }
           //putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(vertices[0].x, vertices[0].y - TEXT_NUM_OFFSET), FONT_HERSHEY_SIMPLEX, TEXT_SIZE, cvScalar(0,255,255));
           putText(  image,  /*输出图像*/
-                    cv::String([[NSString stringWithFormat:@"%.1f", (y-circles_init_y[track_itor])/([[NSDate date] timeIntervalSince1970]-circles_init_time[track_itor])] UTF8String]),  /*输出字符串*/
+                    cv::String([[NSString stringWithFormat:@"%.1f", v*1000] UTF8String]),  /*输出字符串*/
                     cv::Point(vertices[0].x, vertices[0].y - TEXT_NUM_OFFSET),  /*输出位置，字符串的左下角位于这个点*/
                     FONT_HERSHEY_SIMPLEX, /*字体*/
                     TEXT_SIZE,  /*字体大小*/
@@ -385,8 +451,6 @@ vector<cv::Rect> show_box;
           rectangle(image, circ_box[track_itor], COLOR_NON_SELECTED_REC,1);
           putText(image, cv::String([[NSString stringWithFormat:@"%d", track_itor] UTF8String]), cv::Point(circ_box[track_itor].x, circ_box[track_itor].y - TEXT_NUM_OFFSET), FONT_HERSHEY_SIMPLEX, TEXT_SIZE, cvScalar(0,255,255));
         #endif
-
-        rectangle(image, show_box[track_itor], COLOR_NON_SELECTED_REC, 1);
       }
     }
   }
@@ -598,5 +662,4 @@ vector<cv::Rect> show_box;
 
     }
 }
-
 @end

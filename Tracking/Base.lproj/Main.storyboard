@@ -14,74 +14,38 @@
                         <viewControllerLayoutGuide type="bottom" id="2fi-mo-0CV"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
-                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                        <rect key="frame" x="0.0" y="0.0" width="667" height="375"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nzv-O3-VzH">
                                 <rect key="frame" x="0.0" y="0.0" width="568" height="326"/>
                             </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8Qh-CO-ch9">
-                                <rect key="frame" x="518" y="96" width="30" height="30"/>
-                                <state key="normal" title="CT"/>
-                                <connections>
-                                    <action selector="CT:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="lZK-6Z-2uc"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="C0c-wP-mbT">
-                                <rect key="frame" x="516" y="134" width="35" height="30"/>
-                                <state key="normal" title="TLD"/>
-                                <connections>
-                                    <action selector="TLD:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="8It-YC-91g"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3SW-OG-ZPp">
-                                <rect key="frame" x="503" y="58" width="49" height="30"/>
-                                <state key="normal" title="Color"/>
-                                <connections>
-                                    <action selector="COLOR:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="HEm-tn-ObJ"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dTD-Hg-dpg">
-                                <rect key="frame" x="486" y="210" width="62" height="30"/>
-                                <state key="normal" title="Camshift">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <action selector="Camshift:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="mCb-i4-vgK"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qIV-Gw-wlh">
-                                <rect key="frame" x="508" y="172" width="44" height="30"/>
-                                <state key="normal" title="CMT"/>
-                                <connections>
-                                    <action selector="CMT:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="B6p-FS-6Rg"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0lM-uM-ddm">
-                                <rect key="frame" x="503" y="20" width="45" height="30"/>
-                                <state key="normal" title="Struck">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <action selector="Struck:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="Da9-oi-MDd"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="P0o-VS-Mdw">
-                                <rect key="frame" x="502" y="248" width="46" height="30"/>
+                                <rect key="frame" x="601" y="178" width="46" height="30"/>
                                 <state key="normal" title="Hough"/>
                                 <connections>
                                     <action selector="Hough:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="1of-ic-Eqf"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DMO-gg-9eq">
-                                <rect key="frame" x="516" y="282" width="32" height="30"/>
-                                <state key="normal" title="Next"/>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="twN-kM-luJ">
+                                <rect key="frame" x="608" y="253" width="39" height="30"/>
+                                <state key="normal" title="Reset"/>
+                                <connections>
+                                    <action selector="Reset:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="FUO-yw-dmf"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="n98-uW-cvy">
+                                <rect key="frame" x="608" y="109" width="33" height="30"/>
+                                <state key="normal" title="CMT"/>
+                                <connections>
+                                    <action selector="CMT:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="wV0-cf-x50"/>
+                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
-                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
                     <connections>
                         <outlet property="imageView" destination="nzv-O3-VzH" id="P0V-cU-Qf7"/>
                     </connections>
